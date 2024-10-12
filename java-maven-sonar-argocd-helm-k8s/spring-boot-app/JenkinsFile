@@ -22,6 +22,15 @@ pipeline {
         sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn clean package'
       }
     }
+
+    stage('Set Java Home') {
+            steps {
+                script {
+                    env.JAVA_HOME = '/opt/homebrew/opt/openjdk@17'
+                    env.PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
+                }
+            }
+        }
     
     stage('Static Code Analysis') {
       environment {
