@@ -5,6 +5,11 @@ pipeline {
       args '--user root -v /var/run/docker.sock:/var/run/docker.sock' // mount Docker socket to access the host's Docker daemon
     }
   }
+  environment {
+        JAVA_HOME = tool name: 'JDK 17', type: 'jdk' // Use the name you gave your JDK installation in Jenkins
+        PATH = "${JAVA_HOME}/bin:${PATH}"
+    }
+
   stages {
     stage('Checkout') {
       steps {
@@ -19,6 +24,12 @@ pipeline {
         sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn clean package'
       }
     }
+    stage('Check Java Version') {
+    steps {
+        sh 'java -version'
+      }
+    }
+
     stage('Static Code Analysis') {
       environment {
         SONAR_URL = "http://192.168.29.185:9000"
