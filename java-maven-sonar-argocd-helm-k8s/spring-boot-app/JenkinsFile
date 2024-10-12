@@ -2,19 +2,31 @@ pipeline {
   agent {
     docker {
       image 'abhishekf5/maven-abhishek-docker-agent:v1'
-      args '--user root -v /var/run/docker.sock:/var/run/docker.sock' // mount Docker socket to access the host's Docker daemon
+      args '--user root -v /var/run/docker.sock:/var/run/docker.sock' // Mount Docker socket to access the host's Docker daemon
     }
   }
+
   environment {
-        JAVA_HOME = '/opt/homebrew/opt/openjdk@17'  // Set the JAVA_HOME variable
-    }
-  
+    JAVA_HOME = '/opt/homebrew/opt/openjdk@17'  // Set the JAVA_HOME variable globally
+    SONAR_URL = "http://192.168.29.185:9000"
+    DOCKER_IMAGE = "pravesh2003/ultimate-cicd:${BUILD_NUMBER}"
+  }
+
   stages {
     stage('Checkout') {
       steps {
         sh 'echo passed'
         // Uncomment to enable checkout
         // git branch: 'main', url: 'https://github.com/Pravesh-Sudha/Jenkins-Zero-To-Hero.git'
+      }
+    }
+
+    stage('Set Java Home') {
+      steps {
+        script {
+          // Update PATH to include Java binaries
+          env.PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
+        }
       }
     }
     
@@ -26,29 +38,16 @@ pipeline {
       }
     }
 
-    stage('Set Java Home') {
-            steps {
-                script {
-                    env.JAVA_HOME = '/opt/homebrew/opt/openjdk@17'
-                    env.PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
-                }
-            }
-        }
-    
     stage('Static Code Analysis') {
-      environment {
-        SONAR_URL = "http://192.168.29.185:9000"
-      }
       steps {
         withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
           sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}'
         }
       }
     }
-    
+
     stage('Build and Push Docker Image') {
       environment {
-        DOCKER_IMAGE = "pravesh2003/ultimate-cicd:${BUILD_NUMBER}"
         REGISTRY_CREDENTIALS = credentials('docker-cred')
       }
       steps {
@@ -67,7 +66,7 @@ pipeline {
         }
       }
     }
-    
+
     stage('Update Deployment File') {
       environment {
         GIT_REPO_NAME = "Jenkins-Zero-To-Hero"
