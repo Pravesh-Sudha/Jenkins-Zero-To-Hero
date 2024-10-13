@@ -25,7 +25,6 @@ pipeline {
         sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn clean package'
       }
     }
-   
 
     stage('Static Code Analysis') {
       environment {
@@ -45,8 +44,7 @@ pipeline {
       }
       steps {
         script {
-            sh 'docker rmi abhishekf5/ultimate-cicd:${BUILD_NUMBER} || true'
-            sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && docker build --no-cache -t pravesh2003/ultimate-cicd:${BUILD_NUMBER} .'
+            sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && docker build -t ${DOCKER_IMAGE}} .'
             def dockerImage = docker.image("${DOCKER_IMAGE}")
             docker.withRegistry('https://index.docker.io/v1/', "docker-cred") {
                 dockerImage.push()
